@@ -3,6 +3,7 @@ from flask_login import LoginManager
 from controller.post_controller import post_controller
 from controller.auth_controller import auth_controller
 from controller.chat_controller import chat_controller
+from controller.mypage_controller import mypage_controller
 from model.config import get_db_connection
 from model.user_model import load_user
 from flask_socketio import SocketIO
@@ -26,6 +27,7 @@ socketio_init(socketio)  # SocketIO 이벤트를 초기화하는 함수 호출
 
 post_controller(app)
 chat_controller(app)
+mypage_controller(app)
 app.register_blueprint(auth_controller, url_prefix='/auth')  # 인증 관련 경로
 
 
