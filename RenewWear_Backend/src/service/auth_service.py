@@ -28,23 +28,12 @@ def authenticate_user(login_id, password):
         cursor.execute(query, (login_id,))
         user_data = cursor.fetchone()
         
-        # 디버그 로그 추가
-        print("User data fetched:", user_data)
-
-        if user_data:
-            # 비밀번호 검증 전에 저장된 해시된 비밀번호 출력
-            print("Stored hashed password:", user_data['pw'])
-            password_check = bcrypt.checkpw(password.encode('utf-8'), user_data['pw'].encode('utf-8'))
-            print("Password check result:", password_check)
-
-            if password_check:
-                return User(user_data['user_id'], user_data['name'], user_data['login_id'])
-            else:
-                return None
+        if user_data and bcrypt.checkpw(password.encode('utf-8'), user_data['pw'].encode('utf-8')):
+            return User(user_data['user_id'], user_data['name'], user_data['login_id'])
         else:
             return None
     except Exception as e:
-        print("Exception occurred:", e)
+        print(e)
         return None
     finally:
         cursor.close()
