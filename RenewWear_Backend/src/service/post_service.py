@@ -5,7 +5,7 @@ import os
 
 app = Flask(__name__)
 
-UPLOAD_FOLDER = 'static/images'
+UPLOAD_FOLDER = 'static/images/'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
@@ -117,6 +117,12 @@ def add_img(post_id):
     if file :
         filename = secure_filename(file.filename)
         save_path = os.path.join(app.config['UPLOAD_FOLDER'],filename)
+        # 디렉토리가 존재하지 않으면 생성
+        if not os.path.exists(app.config['UPLOAD_FOLDER']):
+            print("Creating upload folder")
+            os.makedirs(app.config['UPLOAD_FOLDER'])
+
+        print(f"Saving file to {save_path}")
         file.save(save_path)
 
         try:
