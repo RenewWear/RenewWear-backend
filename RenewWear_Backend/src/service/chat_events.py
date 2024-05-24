@@ -55,6 +55,13 @@ def socketio_init(socketio) :
         """
 
         cursor.execute(query,(room,name,msg))
+
+        update_query = """
+        UPDATE chatroom
+        SET last_message = %s
+        WHERE room_id = %s
+        """
+        cursor.execute(update_query, (msg, room))
         conn.commit()
         
         emit('message',{'name':name,'msg':msg},room=room)
@@ -80,6 +87,14 @@ def socketio_init(socketio) :
         
         cursor.execute(query,(room))
         conn.commit()
+
+        exitquery = """
+        DELETE FROM chatroom
+        WHERE room_id = %s
+        """
+
+        cursor.execute(exitquery,(room))
+        conn.commit()        
 
         cursor.close()
         conn.close()
