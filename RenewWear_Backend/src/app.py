@@ -25,10 +25,10 @@ CORS(app)
 socketio = SocketIO(app, manage_session=False,cors_allowed_origins="*")
 socketio_init(socketio)  # SocketIO 이벤트를 초기화하는 함수 호출
 
-post_controller(app)
-chat_controller(app)
 mypage_controller(app)
 app.register_blueprint(auth_controller, url_prefix='/auth')  # 인증 관련 경로
+app.register_blueprint(chat_controller, url_prefix='/chat') 
+app.register_blueprint(post_controller, url_prefix='/post')
 
 
 

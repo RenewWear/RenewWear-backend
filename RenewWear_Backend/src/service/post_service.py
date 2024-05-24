@@ -239,3 +239,33 @@ def delete_post(post_id):
     
     finally:
         conn.close()  # 데이터베이스 연결 종료
+
+#찜 목록 추가하기 
+def like_post(data):
+    user_id = data['user_id'] 
+    post_id = data['post_id']
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        #게시글이 존재하는지 먼저 확인하기 
+        cursor.execute("SELECT * FROM posts WHERE post_id = %s",(post_id))  
+        post = cursor.fetchone()  
+        if post is None :
+            return "not found" #해당 게시글이 존재하지 않는 경우 
+        
+        query = "INSERT INTO liked (user_id,post_id) VALUES (%s,%s)"
+        cursor.execute(query,(user_id,post_id))
+        conn.commit()
+        return "success"
+
+    except Exception as e:
+        print(e)
+        return "error"
+    
+    finally:
+        conn.close() 
+
+
+
