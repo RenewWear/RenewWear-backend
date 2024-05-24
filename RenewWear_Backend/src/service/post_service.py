@@ -5,7 +5,7 @@ import os
 
 app = Flask(__name__)
 
-UPLOAD_FOLDER = 'static/images/'
+UPLOAD_FOLDER = 'static/images'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
@@ -275,3 +275,28 @@ def like_post(data):
 
 
 
+# 판매 상태 업데이트 로직
+def update_post_status(post_id, user_id, status):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        # 게시글이 존재하는지 및 해당 사용자가 작성자인지 확인
+        cursor.execute("SELECT * FROM posts WHERE post_id = %s AND user_id = %s", (post_id, user_id))
+        post = cursor.fetchone()
+
+        if post is None:
+            return "not found"  # 해당 게시글이 존재하지 않거나 사용자가 작성자가 아닌 경우
+
+        query = "UPDATE posts SET status = %s WHERE post_id = %s AND user_id = %s"
+        cursor.execute(query, (status, post_id, user_id))
+        conn.commit()
+        return "success"
+
+    except Exception as e:
+        print(e)
+        return "error"
+
+    finally:
+        cursor.close()
+        conn.close()

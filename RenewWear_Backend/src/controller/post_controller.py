@@ -108,3 +108,19 @@ def like_post() :
         return "해당 post_id 를 가진 게시글이 없음",404
     else:
         return "찜 실패",500
+    
+# 게시글 상태 업데이트 API
+@post_controller.route('/post/updatestatus/<int:post_id>', methods=['PUT'])
+def update_post_status(post_id):
+    data = request.get_json()
+    user_id = data.get('user_id')
+    status = data.get('status')
+
+    result = srv.update_post_status(post_id, user_id, status)
+
+    if result == "success":
+        return "상태 업데이트 성공", 200
+    elif result == "not found":
+        return "해당 post_id 를 가진 게시글이 없거나 사용자가 작성자가 아닙니다", 404
+    else:
+        return "상태 업데이트 실패", 500

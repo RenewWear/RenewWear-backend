@@ -1,34 +1,16 @@
 from model.config import get_db_connection
 
-def get_purchase_list(user_id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    try:
-        query = """
-        SELECT p.purchase_id, p.user_id, p.post_id, po.title, po.price, po.created_at
-        FROM purchase p
-        JOIN posts po ON p.post_id = po.post_id
-        WHERE p.user_id = %s
-        """
-        cursor.execute(query, (user_id,))
-        purchases = cursor.fetchall()
-        return purchases
-    except Exception as e:
-        print(e)
-        return None
-    finally:
-        cursor.close()
-        conn.close()
-
 def get_sales_list(user_id):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
         query = """
-        SELECT s.sales_id, s.user_id, s.post_id, po.title, po.price, po.created_at
-        FROM sales s
-        JOIN posts po ON s.post_id = po.post_id
-        WHERE s.user_id = %s
+        SELECT p.post_id, p.user_id, p.title, p.price, p.created_at, p.status,
+               GROUP_CONCAT(pi.img) AS image_urls
+        FROM posts p
+        LEFT JOIN post_img pi ON p.post_id = pi.post_id
+        WHERE p.user_id = %s
+        GROUP BY p.post_id
         """
         cursor.execute(query, (user_id,))
         sales = cursor.fetchall()
@@ -45,10 +27,13 @@ def get_liked_list(user_id):
     cursor = conn.cursor()
     try:
         query = """
-        SELECT l.liked_id, l.user_id, l.post_id, po.title, po.price, po.created_at
+        SELECT l.liked_id, l.user_id, l.post_id, po.title, po.price, po.created_at, po.status,
+               GROUP_CONCAT(pi.img) AS image_urls
         FROM liked l
         JOIN posts po ON l.post_id = po.post_id
+        LEFT JOIN post_img pi ON po.post_id = pi.post_id
         WHERE l.user_id = %s
+        GROUP BY l.liked_id, po.post_id
         """
         cursor.execute(query, (user_id,))
         liked = cursor.fetchall()
@@ -59,3 +44,4 @@ def get_liked_list(user_id):
     finally:
         cursor.close()
         conn.close()
+
