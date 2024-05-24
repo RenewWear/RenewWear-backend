@@ -37,8 +37,8 @@ def chat_controller(app):
         # 구매자 login_id (닉네임) 찾기 
         cursor.execute('SELECT login_id FROM users WHERE user_id = %s', (sender_id,))
         sender_name_result = cursor.fetchone()
-        sender_name = sender_name_result['login_id'] if sender_name_result else None
-        name = sender_name_result['login_id'] if sender_name_result else None
+        # sender_name = sender_name_result['login_id']
+        name = sender_name_result['login_id'] 
 
         cursor.close()
         conn.close()
@@ -53,7 +53,7 @@ def chat_controller(app):
         })
 
     #판매자 채팅방 입장 api 
-    @app.route('/chatroom/<int:room_id>', methods=['GET'])
+    @app.route('/chat/<int:room_id>', methods=['GET'])
     def chatroom(room_id):
 
         # 채팅방에 접속하는 라우트
@@ -85,3 +85,38 @@ def chat_controller(app):
             'room':room_id,
             'name':name
         })
+    
+    @app.route('/chat/list/<int:user_id>', methods=['GET'])
+    def chat_list(user_id):
+        # 채팅방에 접속하는 라우트
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute('SELECT * FROM chatroom WHERE sender_id = %s OR receiver_id = %s', (user_id, user_id))
+        chatroom_data = cursor.fetchall()
+
+        chat_list = []
+        for row in chatroom_data :
+            cursor.execute('SELECT login_id FROM users WHERE user_id = %s', (row['sender_id'],))
+            sender_name_result = cursor.fetchone()
+            sender_name = sender_name_result['login_id'] if sender_name_result else None
+
+            cursor.execute('SELECT login_id FROM users WHERE user_id = %s', (row['receiver_id'],))
+            receiver_name_result = cursor.fetchone()
+            receiver_name = receiver_name_result['login_id'] if receiver_name_result else None
+
+
+            chat_list.append({
+                'room_id' : row['room_id'],
+                'sender_id' : row['sender_id'],
+                'sender_name': sender_name,
+                'receiver_id' : row['receiver_id'],
+                'receiver_name': receiver_name,
+                'post_id': row['post_id'],
+                'last_message': row['last_message']
+            })
+            
+        return jsonify(chat_list)
+
+
+        
