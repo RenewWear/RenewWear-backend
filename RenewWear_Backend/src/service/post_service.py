@@ -124,7 +124,7 @@ def add_img(post_id):
             cursor = conn.cursor()
 
             #post_id 가 존재하는지 먼저 확인
-            cursor.execute("SELECT * FROM post_img WHERE post_id = %s",(post_id))
+            cursor.execute("SELECT * FROM posts WHERE post_id = %s",(post_id))
             img = cursor.fetchone()
 
             if img is None:
@@ -171,7 +171,7 @@ def delete_img(post_id):
 
 
 
-#게시글 수정 로직
+#게시글 수정 로직 & 업로드 로직 
 def update_post(post_id,data):
     title = data['title']
     user_id = int(data['user_id'])
