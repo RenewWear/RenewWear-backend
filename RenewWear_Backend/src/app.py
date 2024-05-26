@@ -19,7 +19,7 @@ login_manager.user_loader(load_user)  # 사용자 로더 함수 설정
 login_manager.login_view = 'auth_controller.login'  # 로그인 페이지 지정
 
 
-CORS(app)
+CORS(app, supports_credentials=True)
 
 # SocketIO 설정
 socketio = SocketIO(app, manage_session=False,cors_allowed_origins="*")

@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, redirect, url_for
 from flask_login import login_user, logout_user, login_required
 import service.auth_service as auth_srv
 from model.user_model import User
+from model.config import get_db_connection
 
 auth_controller = Blueprint('auth_controller', __name__)
 
@@ -26,7 +27,12 @@ def login():
     user = auth_srv.authenticate_user(login_id, password)
     if user:
         login_user(user)
-        return jsonify({"message": "Login successful"}), 200
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = "SELECT user_id FROM users WHERE login_id = %s"
+        cursor.execute(query, (login_id,))
+        user_id = cursor.fetchone()        
+        return jsonify({"user_id": user_id['user_id']}), 200
     else:
         return jsonify({"message": "Invalid credentials"}), 401
 
@@ -34,4 +40,4 @@ def login():
 @login_required
 def logout():
     logout_user()
-    return jsonify({"message": "Logout successful"}), 200
+    return jsonify({"message": "Logout successful", "redirect": "http://localhost:5173/login"}), 200
