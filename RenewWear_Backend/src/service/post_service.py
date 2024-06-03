@@ -30,6 +30,7 @@ def get_post():
         p.created_at, 
         p.exchange, 
         p.delivery, 
+        p.body,
         i.img as image_blob
         FROM 
         posts p
@@ -66,7 +67,7 @@ def get_by_post_id(post_id):
         query = """
         SELECT p.post_id, p.user_id, p.title, p.category, p.tag, p.price, 
             p.location, p.size, p.brand, p.used, p.status, 
-            p.created_at, p.exchange, p.delivery, 
+            p.created_at, p.exchange, p.delivery, p.body,
             i.img as image_blob
         FROM posts p
         LEFT JOIN post_img i ON p.post_id = i.post_id

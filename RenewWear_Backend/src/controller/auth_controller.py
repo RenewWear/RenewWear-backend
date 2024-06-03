@@ -32,7 +32,7 @@ def login():
         query = "SELECT user_id FROM users WHERE login_id = %s"
         cursor.execute(query, (login_id,))
         user_id = cursor.fetchone()        
-        return jsonify({"user_id": user_id['user_id']}), 200
+        return jsonify({"user_id": user_id['user_id'],"login_id":login_id}), 200
     else:
         return jsonify({"message": "Invalid credentials"}), 401
 
