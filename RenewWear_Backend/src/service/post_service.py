@@ -1,15 +1,15 @@
-from flask import request, jsonify, Flask
+from flask import request, jsonify, Flask, url_for
 from model.config import get_db_connection
 from werkzeug.utils import secure_filename
 import os
+import base64
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 
-UPLOAD_FOLDER = 'static/images/'
+UPLOAD_FOLDER = os.path.join(os.getcwd(), 'static/images/')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
-#게시글 조회 로직 
 def get_post():
     conn = get_db_connection()
     cursor = conn.cursor() 
@@ -30,18 +30,22 @@ def get_post():
         p.created_at, 
         p.exchange, 
         p.delivery, 
-        GROUP_CONCAT(i.img) as image_urls
+        i.img as image_blob
         FROM 
         posts p
         LEFT JOIN 
         post_img i ON p.post_id = i.post_id
-        GROUP BY 
-        p.post_id;
         """
-        cursor.execute(query)  # 모든 게시글 & 사진 조회 쿼리 실행
-        posts = cursor.fetchall()  # 조회된 모든 게시글을 가져옴
+        cursor.execute(query)
+        posts = cursor.fetchall()
 
         if posts:
+            # 이미지 데이터를 Base64로 인코딩
+            for post in posts:
+                if post['image_blob']:
+                    # BLOB 데이터를 Base64로 인코딩하고 문자열로 디코딩합니다.
+                    image_base64 = base64.b64encode(post['image_blob']).decode('utf-8')
+                    post['image_blob'] = image_base64
             return posts   
         else:
             return [] 
@@ -54,35 +58,38 @@ def get_post():
         conn.close()  # 데이터베이스 연결 종료
 
 #특정 게시글 조회 로직 
-def get_by_post_id(post_id) :
-        conn = get_db_connection()
-        cursor = conn.cursor()
+def get_by_post_id(post_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
-        try:
-            query = """
-            SELECT p.post_id, p.user_id, p.title, p.category, p.tag, p.price, 
-                p.location, p.size, p.brand, p.used, p.status, 
-                p.created_at, p.exchange, p.delivery, 
-                GROUP_CONCAT(i.img) as image_urls
-            FROM posts p
-            LEFT JOIN post_img i ON p.post_id = i.post_id
-            WHERE p.post_id = %s
-            GROUP BY p.post_id
-            """
-            cursor.execute(query,(post_id,))
-            post = cursor.fetchone()
+    try:
+        query = """
+        SELECT p.post_id, p.user_id, p.title, p.category, p.tag, p.price, 
+            p.location, p.size, p.brand, p.used, p.status, 
+            p.created_at, p.exchange, p.delivery, 
+            i.img as image_blob
+        FROM posts p
+        LEFT JOIN post_img i ON p.post_id = i.post_id
+        WHERE p.post_id = %s
+        """
+        cursor.execute(query, (post_id,))
+        post = cursor.fetchone()
 
-            if post :
-                return post
-            else :
-                return []
-            
-        except Exception as e:
-            print(e)
-            return None
-        finally:
-            cursor.close()
-            conn.close()
+        if post:
+            # BLOB 데이터를 Base64로 인코딩
+            if post['image_blob']:
+                image_base64 = base64.b64encode(post['image_blob']).decode('utf-8')
+                post['image_blob'] = image_base64
+            return post
+        else:
+            return []
+
+    except Exception as e:
+        print(e)
+        return None
+    finally:
+        cursor.close()
+        conn.close()
 
 #create_postid 를 위한 로직 
 def create_postid() :
@@ -107,37 +114,36 @@ def create_postid() :
         cursor.close()
         conn.close()
 
-#사진 업로드 로직 
 def add_img(post_id):
-    if 'image' not in request.files :
+    if 'image' not in request.files:
         return "fail"
     
     file = request.files['image']
 
-    if file :
+    if file:
+        # 파일 이름을 받아오지만, 저장하지는 않습니다.
         filename = secure_filename(file.filename)
-        save_path = os.path.join(app.config['UPLOAD_FOLDER'],filename)
-        # 디렉토리가 존재하지 않으면 생성
-        if not os.path.exists(app.config['UPLOAD_FOLDER']):
-            print("Creating upload folder")
-            os.makedirs(app.config['UPLOAD_FOLDER'])
-
-        print(f"Saving file to {save_path}")
-        file.save(save_path)
+        
+        try:
+            img_data = file.read()  # 파일을 읽어서 바이너리 데이터로 변환
+        except Exception as e:
+            print(f"Error reading file: {e}")
+            return "error"
 
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
 
-            #post_id 가 존재하는지 먼저 확인
-            cursor.execute("SELECT * FROM posts WHERE post_id = %s",(post_id))
+            # post_id가 존재하는지 먼저 확인
+            cursor.execute("SELECT * FROM posts WHERE post_id = %s", (post_id,))
             img = cursor.fetchone()
 
             if img is None:
                 return "not found"
 
-            query = "INSERT INTO post_img (img,post_id) VALUES (%s,%s)"
-            cursor.execute(query,(save_path,post_id))
+            # BLOB 형태로 이미지 데이터와 post_id를 저장합니다.
+            query = "INSERT INTO post_img (img, post_id) VALUES (%s, %s)"
+            cursor.execute(query, (img_data, post_id))  # img_data를 BLOB으로 데이터베이스에 저장
             conn.commit()
 
         except Exception as e:
@@ -149,7 +155,7 @@ def add_img(post_id):
 
         return "success"
 
-    else :
+    else:
         return "fail"
 
 #사진 삭제 로직
