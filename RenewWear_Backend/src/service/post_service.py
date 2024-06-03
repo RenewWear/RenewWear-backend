@@ -5,7 +5,7 @@ import os
 
 app = Flask(__name__)
 
-UPLOAD_FOLDER = 'static/images'
+UPLOAD_FOLDER = 'static/images/'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
@@ -19,12 +19,12 @@ def get_post():
         p.post_id, 
         p.user_id, 
         p.title, 
-        p.category_id, 
+        p.category, 
         p.tag, 
         p.price, 
         p.location, 
         p.size,
-        p.brand_id, 
+        p.brand, 
         p.used, 
         p.status, 
         p.created_at, 
@@ -60,8 +60,8 @@ def get_by_post_id(post_id) :
 
         try:
             query = """
-            SELECT p.post_id, p.user_id, p.title, p.category_id, p.tag, p.price, 
-                p.location, p.size, p.brand_id, p.used, p.status, 
+            SELECT p.post_id, p.user_id, p.title, p.category, p.tag, p.price, 
+                p.location, p.size, p.brand, p.used, p.status, 
                 p.created_at, p.exchange, p.delivery, 
                 GROUP_CONCAT(i.img) as image_urls
             FROM posts p
@@ -182,11 +182,11 @@ def update_post(post_id,data):
     title = data['title']
     user_id = int(data['user_id'])
     tag = data['tag']
-    category_id = int(data['category_id'])
+    category = data['category']
     price = int(data['price'])
     location = data['location']
     size = data['size']
-    brand_id = int(data['brand_id'])
+    brand = data['brand']
     used = data['used']
     body = data['body']
     status = data['status']
@@ -205,10 +205,10 @@ def update_post(post_id,data):
 
         query = """
         UPDATE posts
-        SET title=%s, user_id=%s, tag=%s, category_id=%s, price=%s, location=%s, size=%s, brand_id=%s, used=%s, body=%s, status=%s, exchange=%s, delivery=%s
+        SET title=%s, user_id=%s, tag=%s, category=%s, price=%s, location=%s, size=%s, brand=%s, used=%s, body=%s, status=%s, exchange=%s, delivery=%s
         WHERE post_id=%s
         """
-        cursor.execute(query, (title, user_id, tag, category_id, price, location, size, brand_id, used, body, status, exchange, delivery, post_id))
+        cursor.execute(query, (title, user_id, tag, category, price, location, size, brand, used, body, status, exchange, delivery, post_id))
         conn.commit()
         return "success"
     
